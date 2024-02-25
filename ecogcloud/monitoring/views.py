@@ -153,6 +153,14 @@ class MakeAnalysisPostView(APIView):
 
         plain_message = strip_tags(message)
         self.send_email(data_monitored, subject, message, plain_message)
+        
+    def create_user(self, user_id, email, name):
+        try:
+            user = User.objects.create(user_id=user_id, email=email, name=name)
+            return Response({'message': 'User Created Succesfully'}, status=status.HTTP_202_ACCEPTED)
+        except Exception:
+            return Response({'message': 'Error  Processing Your Request . Try Again later'}, status=status.HTTP_202_ACCEPTED)
+        
 
     def send_processing_email(self, data_monitored, total_time_used ='10 minuts' , dashboard_link='/dashboard'):
         subject = 'Analysis Processing'
@@ -184,3 +192,32 @@ class MakeAnalysisPostView(APIView):
             html_message=message,
             fail_silently=False
         )
+
+
+
+
+
+
+
+class CreateUser(APIView):
+    def post(self, request, user_id, email, username):
+        name = username
+        # Convert email to lowercase for case-insensitive comparison
+        email = email.lower()
+        try:
+            # Try to get an existing user based on user_id or email
+            user = User.objects.filter(user_id=user_id).first() or User.objects.filter(email=email).first()
+
+            # Create the user if not exists or silently register if exists
+            if not user:
+                new_user = User.objects.create(user_id=user_id, email=email, name=name)
+                return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
+
+            return Response({'message': 'User already registered'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            return Response({'message': 'Error processing your request. Try again later.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+    # Add other HTTP methods as needed (e.g., patch, delete, etc.)
